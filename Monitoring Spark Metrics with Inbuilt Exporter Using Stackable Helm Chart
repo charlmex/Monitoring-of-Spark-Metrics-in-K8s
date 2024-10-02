@@ -1,0 +1,106 @@
+This documentation outlines the steps to monitor metrics from a Spark application deployed with the Stackable Helm chart in a Kubernetes cluster. We will use Prometheus for scraping metrics and Grafana for visualization.
+
+# Prerequisites
+- A Kubernetes cluster up and running.
+- Spark deployed using the Stackable Helm chart.
+- kube-prometheus-stack installed in the cluster (includes Prometheus, Grafana, and Alertmanager).
+- Access to a Git repository for managing Helm charts and configurations.
+
+# Step 1: Expose Spark Metrics
+To monitor Spark metrics, we need to ensure that the Spark application exposes the necessary metrics. The Stackable Helm chart provides built-in support for Prometheus metrics.
+
+1.1 Update Spark Configuration
+Create a custom values file for your Spark application (e.g., spark-values.yaml) with the following content:
+  
+````
+metrics:
+  enabled: true
+  prometheus:
+    port: 8090  # Port for the Spark metrics endpoint
+
+````
+
+Deploy the Spark application using ArgoCD. In your ArgoCD application manifest for Spark, add this spark-values.yaml under the helm.valueFiles section.
+
+Example ArgoCD Application Manifest for Spark
+
+   ````
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spark-app
+  namespace: argocd
+spec:
+  destination:
+    namespace: spark-namespace  # Replace with your Spark namespace
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    helm:
+      valueFiles:
+        - spark-values.yaml
+    path: path/to/your/spark/helm/chart
+    repoURL: https://gitlab.com/your-repo.git
+    targetRevision: HEAD
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+
+   ````
+
+# Step 2: Configure Prometheus to Scrape Spark Metrics as a custom values file in the kube-prometheus-stack helm chart
+
+   ````
+# custom-values.yaml for kube-prometheus-stack
+prometheus:
+  additionalServiceMonitors:
+    - name: spark-service-monitor
+      selector:
+        matchLabels:
+          app: spark-app  # Label that matches your Spark application
+      namespaceSelector:
+        matchNames:
+          - spark-namespace  # Namespace where your Spark application is running
+      endpoints:
+        - port: metrics  # Port that exposes metrics in Spark
+          path: /metrics/prometheus  # Path for Prometheus metrics
+          interval: 15s  # Scrape interval
+    - name: spark-operator-service-monitor  # If you're also monitoring the Spark Operator
+      selector:
+        matchLabels:
+          app: spark-operator
+      namespaceSelector:
+        matchNames:
+          - spark-namespace  # Namespace where Spark Operator is running
+      endpoints:
+        - port: metrics  # Port to scrape from the Spark Operator
+          path: /metrics  # Path for Spark Operator metrics
+          interval: 15s
+
+   ````
+Update ArgoCD Application: In your ArgoCD application for kube-prometheus-stack, make sure to include this custom values file in the helm.valueFiles section.
+
+Sync ArgoCD Application: Once you've updated the application, sync it to deploy the changes.
+
+# Step 3: Visualize Metrics in Grafana
+Once Prometheus is scraping the metrics, you can visualize them using Grafana.
+
+3.1 Set up Grafana Dashboards
+Access Grafana by navigating to http://<grafana-url>:3000.
+
+**Import Spark Monitoring Dashboards:**
+
+Go to the Dashboards section and click on Import.
+You can import pre-configured Spark monitoring dashboards from Grafana's dashboard repository. For example:
+- Dashboard ID: 11749 (Apache Spark Metrics Dashboard)
+- Dashboard ID: 10330 (Spark Application Metrics)
+Select Prometheus as the data source when prompted during the dashboard import process.
+Customize the dashboard filters to select the correct Spark application using labels that were set in your ServiceMonitor.
+
+# Step 4: Validate the Setup
+4.1 Check Prometheus Targets
+Access the Prometheus UI by navigating to http://<prometheus-url>:9090/targets.
+Verify that the Spark application’s ServiceMonitor targets appear under the targets section and that the status is up.
+
+## Conclusion
+By following these steps, you can effectively monitor metrics from a Spark application deployed with the Stackable Helm chart using Prometheus and Grafana. This setup enables you to gain valuable insights into the performance and health of your Spark applications in a Kubernetes environment.
