@@ -3,11 +3,11 @@ This is a guide to monitoring spark application metrics in a kubernetes cluster,
 
 **Note:** This documentation assummes that you already have a a running cluster cluster, with spark and kube-prometheus-stack(prometheus, grafana and alertmanager deployed) and  ArgoCD installed and configured for managing your Kubernetes applications.
 
-step 1: Deploy JMX Exporter as a Separate Application
-Step 2: Update the Spark application (and optionally the Spark Operator) to expose Prometheus metrics via the /metrics/prometheus endpoint.
-Step 3: Add a ServiceMonitor to kube-prometheus-stack's Helm values (custom-values.yaml) to scrape metrics from the Spark application.
-Step 4: Visualize these metrics in Grafana by importing pre-configured Spark monitoring dashboards.
-Step 5: Validate that Prometheus is correctly scraping metrics and that Grafana dashboards display them.
+- step 1: Deploy JMX Exporter as a Separate Application
+- Step 2: Update the Spark application (and optionally the Spark Operator) to expose Prometheus metrics via the /metrics/prometheus endpoint.
+- Step 3: Add a ServiceMonitor to kube-prometheus-stack's Helm values (custom-values.yaml) to scrape metrics from the Spark application.
+- Step 4: Visualize these metrics in Grafana by importing pre-configured Spark monitoring dashboards.
+- Step 5: Validate that Prometheus is correctly scraping metrics and that Grafana dashboards display them.
 
 # Step 1: Deploy JMX Exporter as a Separate Application
 1.1 Create a GitLab Repository for JMX Exporter
