@@ -15,9 +15,9 @@ To monitor Spark metrics, you need to configure the Spark application and Spark 
 You’ll modify the Spark application Helm chart (or Spark operator’s values, depending on your setup) to enable Prometheus metrics. Follow these steps:
 
 1. Create a custom values file for the Spark application (e.g., spark-metrics-values.yaml) and include the following to expose metrics for both driver and executor:
+
   
-  ```markdown
-  
+  ````
 spark:
   metrics:
     prometheus:
@@ -29,7 +29,7 @@ spark:
     "spark.metrics.conf.*.sink.prometheusServlet.class": "org.apache.spark.metrics.sink.PrometheusServlet"
     "spark.metrics.conf.*.sink.prometheusServlet.path": /metrics/prometheus
 
-  ```bash
+ ````
 
 This configuration:
 Enables the JVM metrics for both the driver and executors.
@@ -43,12 +43,12 @@ In your ArgoCD Application manifest for Spark, add this spark-metrics-values.yam
 1.2 Update Spark Operator to Expose Metrics (if needed)
 If you’re also deploying the Spark Operator and want to monitor it, you may need to configure it separately. Add the following values to expose metrics from the Spark Operator. This ensures the Spark Operator is also exposing metrics at /metrics.
 
-  ```markdown
+ ````
 metrics:
   enableMetrics: true
   port: 10254  # Port for the Spark Operator metrics
 
-  ```bash
+````
 
 # Step 2: Configure Prometheus to Scrape Spark Metrics
 Now that Spark is exposing metrics, you need to configure Prometheus to scrape those metrics by adding a ServiceMonitor to the kube-prometheus-stack configuration.
@@ -57,7 +57,7 @@ Now that Spark is exposing metrics, you need to configure Prometheus to scrape t
 
 - Create a custom values file for kube-prometheus-stack (e.g., custom-values.yaml) to include the ServiceMonitor for your Spark application:
 
-```markdown
+````
 
 # custom-values.yaml for kube-prometheus-stack
 prometheus:
@@ -89,7 +89,7 @@ prometheus:
           interval: 15s
 
  
- ```bash
+````
 
 - Update the ArgoCD Application manifest for kube-prometheus-stack to include this custom values file:
 - Sync the ArgoCD application for kube-prometheus-stack. Prometheus will now scrape the metrics from the Spark driver, executor, and optionally the Spark Operator.
